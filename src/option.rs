@@ -1,22 +1,41 @@
 /// OptionLike macro
 
-pub trait OptionLike<T> {
-    fn from_option(option: Option<T>) -> Self;
-    fn into_option(self) -> Option<T>;
-    fn as_option(&self) -> Option<&T>;
-    fn as_option_mut(&mut self) -> Option<&mut T>;
-}
+pub trait OptionLike<T> {}
 
 #[macro_export]
-macro_rules! OptionLike {
-    ($Option:ident, $Some:ident, $None:ident) => {
+macro_rules! option_like {
+    (pub $(($pub:ident))? $Option:ident, $Some:ident, $None:ident) => {
         #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash, is_macro::Is)]
-        pub enum $Option<T> {
+        pub $(($pub))?  enum $Option<T> {
             $None,
             $Some(T),
         }
 
-        impl<T> OptionLike<T> for $Option<T> {
+        result_like::impl_option_like!($Option, $Some, $None);
+    };
+    ( $Option:ident, $Some:ident, $None:ident) => {
+        #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash, is_macro::Is)]
+         enum $Option<T> {
+            $None,
+            $Some(T),
+        }
+
+        result_like::impl_option_like!($Option, $Some, $None);
+    };
+    (pub $(($pub:ident))? $Option:ident) => {
+        result_like::option_like!(pub $(($pub))? $Option, Some, None);
+    };
+    ($Option:ident) => {
+        result_like::option_like!($Option, Some, None);
+    };
+}
+
+#[macro_export]
+macro_rules! impl_option_like {
+    ($Option:ident, $Some:ident, $None:ident) => {
+        impl<T> result_like::OptionLike<T> for $Option<T> {}
+
+        impl<T> $Option<T> {
             fn from_option(option: Option<T>) -> Self {
                 match option {
                     Some(v) => $Option::$Some(v),
@@ -44,9 +63,7 @@ macro_rules! OptionLike {
                     $Option::$None => None,
                 }
             }
-        }
 
-        impl<T> $Option<T> {
             #[inline]
             pub fn as_ref(&self) -> $Option<&T> {
                 match *self {
@@ -328,6 +345,6 @@ macro_rules! OptionLike {
         // flatten
     };
     ($Option:ident) => {
-        OptionLike!($Option, Some, None);
+        result_like::impl_option_like!($Option, Some, None);
     };
 }

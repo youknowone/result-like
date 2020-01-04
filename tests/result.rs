@@ -1,7 +1,5 @@
-use result_like::ResultLike;
-
-ResultLike!(XResult);
-ResultLike!(YResult, Okay, Errr);
+result_like::result_like!(XResult);
+result_like::result_like!(YResult, Okay, Errr);
 
 #[test]
 fn test_xo() {
@@ -25,4 +23,10 @@ fn test_yo() {
     let op = xo.into_result();
 
     assert!(op == Ok("s"));
+}
+
+#[test]
+fn test_pub() {
+    result_like::result_like!(pub Pub);
+    result_like::result_like!(pub(crate) PubCrate);
 }

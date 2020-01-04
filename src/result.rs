@@ -1,22 +1,39 @@
 /// ResultLike macro
 
-pub trait ResultLike<T, E> {
-    fn from_result(result: Result<T, E>) -> Self;
-    fn into_result(self) -> Result<T, E>;
-    fn as_result(&self) -> Result<&T, &E>;
-    fn as_result_mut(&mut self) -> Result<&mut T, &mut E>;
-}
+pub trait ResultLike<T, E> {}
 
 #[macro_export]
-macro_rules! ResultLike {
-    ($Result:ident, $Ok:ident, $Err:ident) => {
+macro_rules! result_like {
+    (pub $(($pub:ident))? $Result:ident, $Ok:ident, $Err:ident) => {
         #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash, is_macro::Is)]
-        pub enum $Result<T, E> {
+        pub$(($pub))? enum $Result<T, E> {
             $Ok(T),
             $Err(E),
         }
+        result_like::impl_result_like!($Result, $Ok, $Err);
+    };
+    ($Result:ident, $Ok:ident, $Err:ident) => {
+        #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash, is_macro::Is)]
+        enum $Result<T, E> {
+            $Ok(T),
+            $Err(E),
+        }
+        result_like::impl_result_like!($Result, $Ok, $Err);
+    };
+    (pub $(($pub:ident))? $Result:ident) => {
+        result_like::result_like!(pub $(($pub))? $Result, Ok, Err);
+    };
+    ($Result:ident) => {
+        result_like::result_like!($Result, Ok, Err);
+    };
+}
 
-        impl<T, E> ResultLike<T, E> for $Result<T, E> {
+#[macro_export]
+macro_rules! impl_result_like {
+    ($Result:ident, $Ok:ident, $Err:ident) => {
+        impl<T, E> result_like::ResultLike<T, E> for $Result<T, E> {}
+
+        impl<T, E> $Result<T, E> {
             fn from_result(result: Result<T, E>) -> Self {
                 match result {
                     Ok(v) => $Result::$Ok(v),
@@ -44,9 +61,7 @@ macro_rules! ResultLike {
                     $Result::$Err(ref mut x) => Err(x),
                 }
             }
-        }
 
-        impl<T, E> $Result<T, E> {
             #[inline]
             pub fn as_ref(&self) -> $Result<&T, &E> {
                 match self {
@@ -277,6 +292,6 @@ macro_rules! ResultLike {
         // }
     };
     ($Result:ident) => {
-        ResultLike!($Result, Ok, Err);
+        result_like::impl_result_like!($Result, Ok, Err);
     };
 }

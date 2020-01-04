@@ -5,10 +5,10 @@ Do not redefine option and result utilities to your own enums.
 
 Option example
 ```rust
-use result_like::OptionLike;
+use result_like::option_like;
 
 // Simple case with single argument name
-OptionLike!(MyOption);
+option_like!(MyOption);
 
 let v = MyOption::Some(1);
 // every option utilities are possible including unwrap, map, and, or etc.
@@ -18,8 +18,8 @@ assert!(v.unwrap() == 1);
 let opt = v.into_option();
 assert!(opt == Some(1));
 
-// With custom names
-OptionLike!(Number, Value, Nan);
+// pub enum with custom names
+option_like!(pub Number, Value, Nan);
 
 let v = Number::Value(10);
 assert!(v != Number::Nan);
@@ -27,11 +27,11 @@ assert!(v != Number::Nan);
 
 Result example in same way
 ```rust
-use result_like::ResultLike;
+use result_like::result_like;
 
 // simply,
-ResultLike!(MyResult);
+result_like!(pub(crate) MyResult);
 
 // customizing,
-ResultLike!(Trial, Success, Failure);
+result_like!(Trial, Success, Failure);
 ```
