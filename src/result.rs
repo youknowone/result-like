@@ -34,28 +34,28 @@ macro_rules! impl_result_like {
         impl<T, E> result_like::ResultLike<T, E> for $Result<T, E> {}
 
         impl<T, E> $Result<T, E> {
-            fn from_result(result: Result<T, E>) -> Self {
+            pub fn from_result(result: Result<T, E>) -> Self {
                 match result {
                     Ok(v) => $Result::$Ok(v),
                     Err(e) => $Result::$Err(e),
                 }
             }
 
-            fn into_result(self) -> Result<T, E> {
+            pub fn into_result(self) -> Result<T, E> {
                 match self {
                     $Result::$Ok(v) => Ok(v),
                     $Result::$Err(e) => Err(e),
                 }
             }
 
-            fn as_result(&self) -> Result<&T, &E> {
+            pub fn as_result(&self) -> Result<&T, &E> {
                 match self {
                     $Result::$Ok(ref x) => Ok(x),
                     $Result::$Err(ref x) => Err(x),
                 }
             }
 
-            fn as_result_mut(&mut self) -> Result<&mut T, &mut E> {
+            pub fn as_result_mut(&mut self) -> Result<&mut T, &mut E> {
                 match self {
                     $Result::$Ok(ref mut x) => Ok(x),
                     $Result::$Err(ref mut x) => Err(x),

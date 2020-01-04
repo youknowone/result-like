@@ -36,28 +36,28 @@ macro_rules! impl_option_like {
         impl<T> result_like::OptionLike<T> for $Option<T> {}
 
         impl<T> $Option<T> {
-            fn from_option(option: Option<T>) -> Self {
+            pub fn from_option(option: Option<T>) -> Self {
                 match option {
                     Some(v) => $Option::$Some(v),
                     None => $Option::$None,
                 }
             }
 
-            fn into_option(self) -> Option<T> {
+            pub fn into_option(self) -> Option<T> {
                 match self {
                     $Option::$Some(v) => Some(v),
                     $Option::$None => None,
                 }
             }
 
-            fn as_option(&self) -> Option<&T> {
+            pub fn as_option(&self) -> Option<&T> {
                 match self {
                     $Option::$Some(ref v) => Some(v),
                     $Option::$None => None,
                 }
             }
 
-            fn as_option_mut(&mut self) -> Option<&mut T> {
+            pub fn as_option_mut(&mut self) -> Option<&mut T> {
                 match self {
                     $Option::$Some(ref mut v) => Some(v),
                     $Option::$None => None,
