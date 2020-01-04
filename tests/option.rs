@@ -1,4 +1,7 @@
-use result_like::*;
+use result_like::OptionLike;
+
+OptionLike!(XOption);
+OptionLike!(YOption, Tone, Mome);
 
 #[test]
 fn test_xo() {
