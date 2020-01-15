@@ -1,5 +1,7 @@
 # OptionLike and ResultLike
 
+Install: [https://crates.io/crates/result-like](https://crates.io/crates/result-like)
+
 Define your own Option-like and Result-like enum types.
 Do not redefine option and result utilities to your own enums.
 
