@@ -239,10 +239,14 @@ macro_rules! impl_result_like {
 
         impl<T, E> $Result<Option<T>, E> {
             #[inline]
-            pub fn transpose(self) -> Option<Result<T, E>> {
-                self.into_result().transpose()
+            pub fn transpose(self) -> Option<$Result<T, E>> {
+                self.into_result()
+                    .transpose()
+                    .map(|r| $Result::from_result(r))
             }
         }
+
+        // flatten
 
         impl<T: Clone, E: Clone> Clone for $Result<T, E> {
             #[inline]

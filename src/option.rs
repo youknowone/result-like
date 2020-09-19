@@ -265,8 +265,10 @@ macro_rules! impl_option_like {
 
         impl<T, E> $Option<Result<T, E>> {
             #[inline]
-            pub fn transpose(self) -> Result<Option<T>, E> {
-                self.into_option().transpose()
+            pub fn transpose(self) -> Result<$Option<T>, E> {
+                self.into_option()
+                    .transpose()
+                    .map(|op| $Option::from_option(op))
             }
         }
         // TODO: result-like
