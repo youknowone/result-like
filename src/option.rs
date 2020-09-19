@@ -36,6 +36,7 @@ macro_rules! impl_option_like {
         impl<T> result_like::OptionLike<T> for $Option<T> {}
 
         impl<T> $Option<T> {
+            #[inline]
             pub fn from_option(option: Option<T>) -> Self {
                 match option {
                     Some(v) => $Option::$Some(v),
@@ -43,6 +44,7 @@ macro_rules! impl_option_like {
                 }
             }
 
+            #[inline]
             pub fn into_option(self) -> Option<T> {
                 match self {
                     $Option::$Some(v) => Some(v),
@@ -50,6 +52,7 @@ macro_rules! impl_option_like {
                 }
             }
 
+            #[inline]
             pub fn as_option(&self) -> Option<&T> {
                 match self {
                     $Option::$Some(ref v) => Some(v),
@@ -57,6 +60,7 @@ macro_rules! impl_option_like {
                 }
             }
 
+            #[inline]
             pub fn as_option_mut(&mut self) -> Option<&mut T> {
                 match self {
                     $Option::$Some(ref mut v) => Some(v),
@@ -215,6 +219,17 @@ macro_rules! impl_option_like {
             pub fn replace(&mut self, value: T) -> Self {
                 std::mem::replace(self, $Option::$Some(value))
             }
+
+            pub fn zip<U>(self, other: $Option<U>) -> $Option<(T, U)> {
+                $Option::from_option(self.into_option().zip(other.into_option()))
+            }
+
+            // pub fn zip_with<U, F, R>(self, other: $Option<U>, f: F) -> $Option<R>
+            // where
+            //     F: FnOnce(T, U) -> R,
+            // {
+            //     $Option::from_option(self.into_option().zip_with(other.into_option(), f))
+            // }
         }
 
         impl<T: Copy> $Option<&T> {
@@ -240,6 +255,10 @@ macro_rules! impl_option_like {
                 self.map(|t| t.clone())
             }
         }
+
+        // impl<T: fmt::Debug> $Option<T>
+        // expect_none
+        // unwrap_none
 
         impl<T: Default> $Option<T> {
             #[inline]

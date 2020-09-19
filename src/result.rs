@@ -34,6 +34,7 @@ macro_rules! impl_result_like {
         impl<T, E> result_like::ResultLike<T, E> for $Result<T, E> {}
 
         impl<T, E> $Result<T, E> {
+            #[inline]
             pub fn from_result(result: Result<T, E>) -> Self {
                 match result {
                     Ok(v) => $Result::$Ok(v),
@@ -41,6 +42,7 @@ macro_rules! impl_result_like {
                 }
             }
 
+            #[inline]
             pub fn into_result(self) -> Result<T, E> {
                 match self {
                     $Result::$Ok(v) => Ok(v),
@@ -48,6 +50,7 @@ macro_rules! impl_result_like {
                 }
             }
 
+            #[inline]
             pub fn as_result(&self) -> Result<&T, &E> {
                 match self {
                     $Result::$Ok(ref x) => Ok(x),
@@ -55,12 +58,16 @@ macro_rules! impl_result_like {
                 }
             }
 
+            #[inline]
             pub fn as_result_mut(&mut self) -> Result<&mut T, &mut E> {
                 match self {
                     $Result::$Ok(ref mut x) => Ok(x),
                     $Result::$Err(ref mut x) => Err(x),
                 }
             }
+
+            // contains
+            // contains_err
 
             #[inline]
             pub fn as_ref(&self) -> $Result<&T, &E> {
@@ -83,6 +90,14 @@ macro_rules! impl_result_like {
                 match self {
                     $Result::$Ok(t) => $Result::$Ok(op(t)),
                     $Result::$Err(e) => $Result::$Err(e),
+                }
+            }
+
+            #[inline]
+            pub fn map_or<U, F: FnOnce(T) -> U>(self, default: U, f: F) -> U {
+                match self {
+                    $Result::$Ok(t) => f(t),
+                    $Result::$Err(_) => default,
                 }
             }
 
@@ -175,17 +190,22 @@ macro_rules! impl_result_like {
 
         impl<T, E: std::fmt::Debug> $Result<T, E> {
             #[inline]
-            pub fn unwrap(self) -> T {
-                self.into_result().unwrap()
+            pub fn expect(self, msg: &str) -> T {
+                self.into_result().expect(msg)
             }
 
             #[inline]
-            pub fn expect(self, msg: &str) -> T {
-                self.into_result().expect(msg)
+            pub fn unwrap(self) -> T {
+                self.into_result().unwrap()
             }
         }
 
         impl<T: std::fmt::Debug, E> $Result<T, E> {
+            // #[inline]
+            // pub fn expect_err(self, msg: &str) -> E {
+            //     self.into_result().expect_err(msg)
+            // }
+
             #[inline]
             pub fn unwrap_err(self) -> E {
                 self.into_result().unwrap_err()
@@ -198,6 +218,8 @@ macro_rules! impl_result_like {
                 self.into_result().unwrap_or_default()
             }
         }
+
+        // into_ok
 
         impl<T: std::ops::Deref, E> $Result<T, E> {
             pub fn as_deref_ok(&self) -> $Result<&T::Target, &E> {
