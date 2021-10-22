@@ -190,6 +190,9 @@ impl LikeTrait for OptionLike {
                 PrimaryValue: primary_inner,
             },
             {
+                impl impl_generics result_like::OptionLike for Type ty_generics where_clause {
+                    type SomeType = PrimaryValue;
+                }
                 impl impl_generics Type ty_generics where_clause {
                     #[inline]
                     pub fn from_option(option: Option<PrimaryValue>) -> Self {
@@ -255,37 +258,31 @@ impl LikeTrait for OptionLike {
 
                     #[inline]
                     pub fn filter<P: FnOnce(&PrimaryValue) -> bool>(self, predicate: P) -> Self {
-                        if let Type::Primary(x) = self {
-                            if predicate(&x) {
-                                return Type::Primary(x);
-                            }
-                        }
-                        Type::Secondary
+                        Self::from_option(self.into_option().filter(predicate))
                     }
 
                     #[inline]
                     pub fn or(self, optb: Self) -> Self {
-                        match self {
-                            Type::Primary(_) => self,
-                            Type::Secondary => optb,
-                        }
+                        Self::from_option(self.into_option().or(optb.into_option()))
                     }
 
                     #[inline]
                     pub fn or_else<_Function: FnOnce() -> Self>(self, f: _Function) -> Self {
-                        match self {
-                            Type::Primary(_) => self,
-                            Type::Secondary => f(),
-                        }
+                        Self::from_option(self.into_option().or_else(|| f().into_option()))
+                    }
+
+                    #[inline]
+                    fn map_or<_Other, _Function: FnOnce(PrimaryValue) -> _Other>(
+                        self,
+                        default: _Other,
+                        f: _Function,
+                    ) -> _Other {
+                        self.into_option().map_or(default, f)
                     }
 
                     #[inline]
                     pub fn xor(self, optb: Self) -> Self {
-                        match (self, optb) {
-                            (Type::Primary(a), Type::Secondary) => Type::Primary(a),
-                            (Type::Secondary, Type::Primary(b)) => Type::Primary(b),
-                            _ => Type::Secondary,
-                        }
+                        Self::from_option(self.into_option().xor(optb.into_option()))
                     }
 
                     #[inline]
@@ -319,10 +316,7 @@ impl LikeTrait for OptionLike {
                 impl impl_generics Type ty_generics where where_predicates PrimaryValue: Default {
                     #[inline]
                     pub fn unwrap_or_default(self) -> PrimaryValue {
-                        match self {
-                            Type::Primary(x) => x,
-                            Type::Secondary => Default::default(),
-                        }
+                        self.into_option().unwrap_or_default()
                     }
                 }
 
@@ -410,11 +404,6 @@ impl LikeTrait for OptionLike {
                                 Type::Primary(x) => Type::Primary(f(x)),
                                 Type::Secondary => Type::Secondary,
                             }
-                        }
-
-                        #[inline]
-                        pub fn map_or<_Other, _Function: FnOnce(PrimaryValue) -> _Other>(self, default: _Other, f: _Function) -> _Other {
-                            self.into_option().map_or(default, f)
                         }
 
                         #[inline]
@@ -705,7 +694,10 @@ impl LikeTrait for ResultLike {
                     E: secondary_inner,
                 },
                 {
-
+                impl impl_generics result_like::ResultLike for Type ty_generics where_clause {
+                    type OkType = T;
+                    type ErrType = E;
+                }
                 impl impl_generics Type ty_generics where_clause {
                     // contains
                     // contains_err
