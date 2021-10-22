@@ -7,33 +7,49 @@ Avoid to reimplement everything of option and result for your own enums.
 
 Option example
 ```rust
-use result_like::option_like;
+use result_like::OptionLike;
 
 // Simple case with single argument name to use Some and None
-option_like!(MyOption);
+#[derive(OptionLike)]
+enum MyOption<T> {
+    Some(T),
+    None,
+}
 
 let v = MyOption::Some(1);
 // every option utilities are possible including unwrap, map, and, or etc.
-assert!(v.unwrap() == 1);
+assert_eq!(v.unwrap(), 1);
 
 // convertable to option
 let opt = v.into_option();
-assert!(opt == Some(1));
+assert_eq!(opt, Some(1));
 
-// pub enum with custom names instead of Some and None
-option_like!(pub Number, Value, Nan);
+// enum with custom names instead of Some and None
+#[derive(OptionLike)]
+enum Number {
+    Value(i64),
+    Nan,
+}
 
 let v = Number::Value(10);
-assert!(v != Number::Nan);
+assert_ne!(v, Number::Nan);
 ```
 
 Result example in same way
 ```rust
-use result_like::result_like;
+use result_like::ResultLike;
 
-// simply,
-result_like!(pub(crate) MyResult);
+// typical
+#[derive(ResultLike)]
+enum MyResult<T, E> {
+    Ok(T),
+    Err(E),
+}
 
-// customizing,
-result_like!(Trial, Success, Failure);
+// value-only
+#[derive(ResultLike)]
+enum Trial {
+    Success(String),
+    Failure(String),
+}
 ```

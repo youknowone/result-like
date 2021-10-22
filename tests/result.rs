@@ -1,32 +1,42 @@
-result_like::result_like!(XResult);
-result_like::result_like!(YResult, Okay, Errr);
+use result_like::ResultLike;
 
 #[test]
-fn test_xo() {
-    let xo: XResult<u32, ()> = XResult::Ok(1);
+fn test_simple() {
+    #[derive(ResultLike)]
+    enum XResult {
+        Ok(u32),
+        Err(()),
+    }
 
-    assert!(xo.is_ok());
-    assert!(xo.unwrap() == 1);
+    let xo = XResult::Ok(1);
+
+    assert_eq!(xo.unwrap(), 1);
 
     let op = xo.into_result();
 
-    assert!(op == Ok(1));
+    assert_eq!(op, Ok(1));
+
+    let xo = xo.map_or(0, |v| v * 2);
+    assert_eq!(xo, 2);
+
+    assert_eq!(XResult::Err(()).as_result(), Err(&()));
 }
 
 #[test]
-fn test_yo() {
-    let xo: YResult<&str, ()> = YResult::Okay("s");
+fn test_generic() {
+    #[derive(ResultLike)]
+    enum YResult<T, E> {
+        Okay(T),
+        Errr(E),
+    }
+    let mut xo: YResult<&str, ()> = YResult::Okay("s");
 
-    assert!(xo.is_okay());
-    assert!(xo.unwrap() == "s");
+    assert_eq!(xo.unwrap(), "s");
 
     let op = xo.into_result();
 
-    assert!(op == Ok("s"));
-}
+    assert_eq!(op, Ok("s"));
 
-#[test]
-fn test_pub() {
-    result_like::result_like!(pub Pub);
-    result_like::result_like!(pub(crate) PubCrate);
+    xo = xo.and_then(|_| YResult::Errr(()));
+    assert_eq!(xo.into_result(), Err(()));
 }
