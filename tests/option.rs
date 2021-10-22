@@ -1,10 +1,34 @@
+use result_like::OptionLike;
+
+#[test]
+fn test_generation() {
+    #[derive(OptionLike)]
+    enum ValueOption {
+        Some(i32),
+        None,
+    }
+
+    assert_eq!(ValueOption::Some(10).into_option(), Some(10));
+
+    #[derive(OptionLike)]
+    enum GenericOption<U> {
+        Some(U),
+        None,
+    }
+
+    assert_eq!(GenericOption::Some("x").into_option(), Some("x"));
+}
+
 #[test]
 fn test_xo() {
-    result_like::option_like!(XOption);
+    #[derive(OptionLike)]
+    enum XOption<T> {
+        Some(T),
+        None,
+    }
 
     let xo = XOption::Some(1);
 
-    assert!(xo.is_some());
     assert!(xo.unwrap() == 1);
 
     let op = xo.into_option();
@@ -14,12 +38,11 @@ fn test_xo() {
 
 #[test]
 fn test_yo() {
-    #[derive(Copy, is_macro::Is)]
+    #[derive(OptionLike, is_macro::Is)]
     enum YOption<T> {
         Tone(T),
         Mome,
     }
-    result_like::impl_option_like!(YOption, Tone, Mome);
 
     let xo = YOption::Tone("s");
 
@@ -29,10 +52,4 @@ fn test_yo() {
     let op = xo.into_option();
 
     assert!(op == Some("s"));
-}
-
-#[test]
-fn test_pub() {
-    result_like::option_like!(pub Pub);
-    result_like::option_like!(pub(crate) PubCrate);
 }
