@@ -1,7 +1,9 @@
 [package]
 name = "result-like-derive"
+description = "derive macros for result-like"
 version = "0.4.0"
-edition = "2018"
+edition = "2021"
+license = "BSD-2-Clause"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

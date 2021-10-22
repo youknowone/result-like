@@ -272,7 +272,7 @@ impl LikeTrait for OptionLike {
                     }
 
                     #[inline]
-                    fn map_or<_Other, _Function: FnOnce(PrimaryValue) -> _Other>(
+                    pub fn map_or<_Other, _Function: FnOnce(PrimaryValue) -> _Other>(
                         self,
                         default: _Other,
                         f: _Function,
