@@ -4,12 +4,12 @@ extern crate proc_macro;
 
 use inflector::Inflector;
 use pmutil::{smart_quote, Quote, ToTokensExt};
-use quote::quote;
-use syn::punctuated::Punctuated;
+use quote::{quote, ToTokens};
 use syn::{
-    token::Comma, Data, DataEnum, DeriveInput, Field, Generics, Ident, ItemMod, WhereClause,
-    WherePredicate,
+    punctuated::Punctuated, token::Comma, Data, DataEnum, DeriveInput, Field, Generics, Ident,
+    ItemMod, WhereClause, WherePredicate,
 };
+use syn_ext::ext::*;
 
 #[proc_macro_derive(OptionLike)]
 pub fn option_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -572,6 +572,10 @@ impl LikeTrait for ResultLike {
                 E: secondary_inner,
             },
             {
+                impl impl_generics result_like::ResultLike for Type ty_generics where_clause {
+                    type OkType = T;
+                    type ErrType = E;
+                }
                 impl impl_generics Type ty_generics where_clause {
                     #[inline]
                     pub fn from_result(result: Result<T, E>) -> Self {
@@ -678,9 +682,159 @@ impl LikeTrait for ResultLike {
                     }
                 }
 
+                impl impl_generics IntoIterator for Type ty_generics {
+                    type Item = T;
+                    type IntoIter = std::result::IntoIter<T>;
+
+                    #[inline]
+                    fn into_iter(self) -> std::result::IntoIter<T> {
+                        self.into_result().into_iter()
+                    }
+                }
             }
         ));
-        if !ty_generics.params.is_empty() {
+        let param_symbols: Vec<_> = ty_generics
+            .params
+            .iter()
+            .map(|p| p.get_ident().unwrap().to_string())
+            .collect();
+        let primary_is_generic = primary_inner.iter().next().map_or(false, |f| {
+            param_symbols.contains(&f.ty.to_token_stream().to_string())
+        });
+        let secondary_is_generic = secondary_inner.unwrap().iter().next().map_or(false, |f| {
+            param_symbols.contains(&f.ty.to_token_stream().to_string())
+        });
+        let everything_is_generic = primary_is_generic && secondary_is_generic;
+
+        // println!(
+        //     "flags {:?}  {} {} {}",
+        //     param_symbols, primary_is_generic, secondary_is_generic, everything_is_generic
+        // );
+
+        if primary_is_generic {
+            result_impl = result_impl.quote_with(smart_quote!(
+                Vars {
+                    Type: &typ,
+                    impl_generics: &impl_generics,
+                    ty_generics: &ty_generics,
+                    where_predicates: &where_predicates,
+                    where_clause: &where_clause,
+                    Primary: primary,
+                    Secondary: secondary,
+                    T: primary_inner,
+                    E: secondary_inner,
+                    GenericE: if secondary_is_generic { secondary_inner } else { None },
+                },
+                {
+                    impl impl_generics Type ty_generics where_clause {
+                        #[inline]
+                        pub fn map<U, F: FnOnce(T) -> U>(self, op: F) -> Type<U, GenericE> {
+                            match self {
+                                Type::Primary(t) => Type::Primary(op(t)),
+                                Type::Secondary(e) => Type::Secondary(e),
+                            }
+                        }
+                        #[inline]
+                        pub fn map_or_else<U, M: FnOnce(T) -> U, F: FnOnce(E) -> U>(
+                            self,
+                            fallback: F,
+                            map: M,
+                        ) -> U {
+                            self.map(map).unwrap_or_else(fallback)
+                        }
+                        #[inline]
+                        pub fn and<U>(self, res: Type<U, GenericE>) -> Type<U, GenericE> {
+                            match self {
+                                Type::Primary(_) => res,
+                                Type::Secondary(e) => Type::Secondary(e),
+                            }
+                        }
+                        #[inline]
+                        pub fn and_then<U, F: FnOnce(T) -> Type<U, GenericE>>(self, op: F) -> Type<U, GenericE> {
+                            match self {
+                                Type::Primary(t) => op(t),
+                                Type::Secondary(e) => Type::Secondary(e),
+                            }
+                        }
+                    }
+
+                    impl impl_generics Type<&T, GenericE> where where_predicates T: Copy {
+                        pub fn copied(self) -> Type ty_generics {
+                            self.map(|&t| t)
+                        }
+                    }
+                    impl impl_generics Type<&mut T, GenericE> where where_predicates T: Copy {
+                        pub fn copied(self) -> Type ty_generics {
+                            self.map(|&mut t| t)
+                        }
+                    }
+
+                    impl impl_generics Type<&T, GenericE> where where_predicates T: Clone {
+                        pub fn cloned(self) -> Type ty_generics {
+                            self.map(|t| t.clone())
+                        }
+                    }
+                    impl impl_generics Type<&mut T, GenericE> where where_predicates T: Clone {
+                        pub fn cloned(self) -> Type ty_generics {
+                            self.map(|t| t.clone())
+                        }
+                    }
+
+                    impl impl_generics Type<Option<T>, GenericE> {
+                        #[inline]
+                        pub fn transpose(self) -> Option<Type<T, GenericE>> {
+                            self.into_result()
+                                .transpose()
+                                .map(|r| Type::from_result(r))
+                        }
+                    }
+                }
+            ));
+        }
+
+        if secondary_is_generic {
+            result_impl = result_impl.quote_with(smart_quote!(
+                Vars {
+                    Type: &typ,
+                    impl_generics: &impl_generics,
+                    ty_generics: &ty_generics,
+                    // where_predicates: &where_predicates,
+                    where_clause: &where_clause,
+                    Primary: primary,
+                    Secondary: secondary,
+                    E: secondary_inner,
+                    GenericT: if primary_is_generic { Some(quote!(#primary_inner ,)) } else { None },
+                },
+                {
+                    impl impl_generics Type ty_generics where_clause {
+                        #[inline]
+                        pub fn map_err<F, O: FnOnce(E) -> F>(self, op: O) -> Type<GenericT F> {
+                            match self {
+                                Type::Primary(t) => Type::Primary(t),
+                                Type::Secondary(e) => Type::Secondary(op(e)),
+                            }
+                        }
+
+                        #[inline]
+                        pub fn or<F>(self, res: Type<GenericT F>) -> Type<GenericT F> {
+                            match self {
+                                Type::Primary(v) => Type::Primary(v),
+                                Type::Secondary(_) => res,
+                            }
+                        }
+                        #[inline]
+                        pub fn or_else<F, O: FnOnce(E) -> Type<GenericT F>>(self, op: O) -> Type<GenericT F> {
+                            match self {
+                                Type::Primary(t) => Type::Primary(t),
+                                Type::Secondary(e) => op(e),
+                            }
+                        }
+                    }
+                }
+            ));
+        }
+
+        if everything_is_generic {
             result_impl = result_impl.quote_with(smart_quote!(
                 Vars {
                     Type: &typ,
@@ -694,10 +848,6 @@ impl LikeTrait for ResultLike {
                     E: secondary_inner,
                 },
                 {
-                impl impl_generics result_like::ResultLike for Type ty_generics where_clause {
-                    type OkType = T;
-                    type ErrType = E;
-                }
                 impl impl_generics Type ty_generics where_clause {
                     // contains
                     // contains_err
@@ -718,90 +868,10 @@ impl LikeTrait for ResultLike {
                         }
                     }
 
-                       #[inline]
-                    pub fn map<U, F: FnOnce(T) -> U>(self, op: F) -> Type<U, E> {
-                        match self {
-                            Type::Primary(t) => Type::Primary(op(t)),
-                            Type::Secondary(e) => Type::Secondary(e),
-                        }
-                    }
-
-                    #[inline]
-                    pub fn map_or_else<U, M: FnOnce(T) -> U, F: FnOnce(E) -> U>(
-                        self,
-                        fallback: F,
-                        map: M,
-                    ) -> U {
-                        self.map(map).unwrap_or_else(fallback)
-                    }
-
-                    #[inline]
-                    pub fn map_err<F, O: FnOnce(E) -> F>(self, op: O) -> Type<T, F> {
-                        match self {
-                            Type::Primary(t) => Type::Primary(t),
-                            Type::Secondary(e) => Type::Secondary(op(e)),
-                        }
-                    }
-
                     // iter
                     // iter_mut
-
-                    #[inline]
-                    pub fn and<U>(self, res: Type<U, E>) -> Type<U, E> {
-                        match self {
-                            Type::Primary(_) => res,
-                            Type::Secondary(e) => Type::Secondary(e),
-                        }
-                    }
-
-                    #[inline]
-                    pub fn and_then<U, F: FnOnce(T) -> Type<U, E>>(self, op: F) -> Type<U, E> {
-                        match self {
-                            Type::Primary(t) => op(t),
-                            Type::Secondary(e) => Type::Secondary(e),
-                        }
-                    }
-
-                    #[inline]
-                    pub fn or<F>(self, res: Type<T, F>) -> Type<T, F> {
-                        match self {
-                            Type::Primary(v) => Type::Primary(v),
-                            Type::Secondary(_) => res,
-                        }
-                    }
-
-                    #[inline]
-                    pub fn or_else<F, O: FnOnce(E) -> Type<T, F>>(self, op: O) -> Type<T, F> {
-                        match self {
-                            Type::Primary(t) => Type::Primary(t),
-                            Type::Secondary(e) => op(e),
-                        }
-                    }
                 }
 
-                impl<T: Copy, E> Type<&T, E> {
-                    pub fn copied(self) -> Type<T, E> {
-                        self.map(|&t| t)
-                    }
-                }
-
-                impl<T: Copy, E> Type<&mut T, E> {
-                    pub fn copied(self) -> Type<T, E> {
-                        self.map(|&mut t| t)
-                    }
-                }
-
-                impl<T: Clone, E> Type<&T, E> {
-                    pub fn cloned(self) -> Type<T, E> {
-                        self.map(|t| t.clone())
-                    }
-                }
-
-                impl<T: Clone, E> Type<&mut T, E> {
-                    pub fn cloned(self) -> Type<T, E> {
-                        self.map(|t| t.clone())
-                    }
-                }
 
                 // impl<T: std::ops::Deref, E> Type<T, E> {
                 //     pub fn as_deref_ok(&self) -> Type<&T::Target, &E> {
@@ -841,26 +911,8 @@ impl LikeTrait for ResultLike {
                 //     }
                 // }
 
-                impl<T, E> Type<Option<T>, E> {
-                    #[inline]
-                    pub fn transpose(self) -> Option<Type<T, E>> {
-                        self.into_result()
-                            .transpose()
-                            .map(|r| Type::from_result(r))
-                    }
-                }
 
                 // flatten
-
-                impl<T, E> IntoIterator for Type<T, E> {
-                    type Item = T;
-                    type IntoIter = std::result::IntoIter<T>;
-
-                    #[inline]
-                    fn into_iter(self) -> std::result::IntoIter<T> {
-                        self.into_result().into_iter()
-                    }
-                }
 
                 // impl<'a, T, E> IntoIterator for &'a Type<T, E> {
                 //     type Item = &'a T;

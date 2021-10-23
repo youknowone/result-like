@@ -22,8 +22,28 @@ fn test_simple() {
     assert_eq!(XResult::Err(()).as_result(), Err(&()));
 }
 
+#[allow(dead_code)]
 #[test]
-fn test_generic() {
+fn test_gen() {
+    #[derive(ResultLike)]
+    enum ResultA<T> {
+        Ok(T),
+        Err(()),
+    }
+
+    assert_eq!(ResultA::Ok(10).map(|i| i * 2).unwrap(), 20);
+
+    #[derive(ResultLike)]
+    enum ResultB<E> {
+        Ok(i32),
+        Err(E),
+    }
+
+    assert_eq!(ResultB::Err(10).or::<()>(ResultB::Ok(10)).unwrap(), 10);
+}
+
+#[test]
+fn test_result() {
     #[derive(ResultLike)]
     enum YResult<T, E> {
         Okay(T),
