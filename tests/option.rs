@@ -17,6 +17,14 @@ fn test_generation() {
     }
 
     assert_eq!(GenericOption::Some("x").into_option(), Some("x"));
+
+    struct X;
+
+    #[derive(OptionLike)]
+    enum BareOption {
+        Some(X),
+        None,
+    }
 }
 
 #[test]
