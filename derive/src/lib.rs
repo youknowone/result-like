@@ -183,7 +183,6 @@ impl LikeTrait for OptionLike {
                 Type: &typ,
                 impl_generics: &impl_generics,
                 ty_generics: &ty_generics,
-                where_predicates: &where_predicates,
                 where_clause: &where_clause,
                 Primary: primary,
                 Secondary: secondary,
@@ -272,7 +271,7 @@ impl LikeTrait for OptionLike {
                     }
 
                     #[inline]
-                    fn map_or<_Other, _Function: FnOnce(PrimaryValue) -> _Other>(
+                    pub fn map_or<_Other, _Function: FnOnce(PrimaryValue) -> _Other>(
                         self,
                         default: _Other,
                         f: _Function,
@@ -303,40 +302,8 @@ impl LikeTrait for OptionLike {
                     }
 
                     #[inline]
-                    pub fn take(&mut self) -> Self where where_predicates PrimaryValue: Default {
-                        std::mem::take(self)
-                    }
-
-                    #[inline]
                     pub fn replace(&mut self, value: PrimaryValue) -> Self {
                         std::mem::replace(self, Type::Primary(value))
-                    }
-                }
-
-                impl impl_generics Type ty_generics where where_predicates PrimaryValue: Default {
-                    #[inline]
-                    pub fn unwrap_or_default(self) -> PrimaryValue {
-                        self.into_option().unwrap_or_default()
-                    }
-                }
-
-                impl impl_generics Copy for Type ty_generics where where_predicates PrimaryValue: Copy {}
-
-                impl impl_generics Clone for Type ty_generics where where_predicates PrimaryValue: Clone {
-                    #[inline]
-                    fn clone(&self) -> Self {
-                        match self {
-                            Type::Primary(x) => Type::Primary(x.clone()),
-                            Type::Secondary => Type::Secondary,
-                        }
-                    }
-
-                    #[inline]
-                    fn clone_from(&mut self, source: &Self) {
-                        match (self, source) {
-                            (Type::Primary(to), Type::Primary(from)) => to.clone_from(from),
-                            (to, from) => *to = from.clone(),
-                        }
                     }
                 }
 
@@ -444,6 +411,36 @@ impl LikeTrait for OptionLike {
                         // {
                         //     Type::from_option(self.into_option().zip_with(other.into_option(), f))
                         // }
+
+                        #[inline]
+                        pub fn take(&mut self) -> Self where where_predicates PrimaryValue: Default {
+                            std::mem::take(self)
+                        }
+
+                        #[inline]
+                        pub fn unwrap_or_default(self) -> PrimaryValue where where_predicates PrimaryValue: Default {
+                            self.into_option().unwrap_or_default()
+                        }
+                    }
+
+                    impl impl_generics Copy for Type ty_generics where where_predicates PrimaryValue: Copy {}
+
+                    impl impl_generics Clone for Type ty_generics where where_predicates PrimaryValue: Clone {
+                        #[inline]
+                        fn clone(&self) -> Self {
+                            match self {
+                                Type::Primary(x) => Type::Primary(x.clone()),
+                                Type::Secondary => Type::Secondary,
+                            }
+                        }
+
+                        #[inline]
+                        fn clone_from(&mut self, source: &Self) {
+                            match (self, source) {
+                                (Type::Primary(to), Type::Primary(from)) => to.clone_from(from),
+                                (to, from) => *to = from.clone(),
+                            }
+                        }
                     }
 
                     impl impl_generics Type<&PrimaryValue> where where_predicates PrimaryValue: Copy {
@@ -653,34 +650,7 @@ impl LikeTrait for ResultLike {
                     }
                 }
 
-                impl impl_generics Type ty_generics where where_predicates T: Default {
-                    #[inline]
-                    pub fn unwrap_or_default(self) -> T {
-                        self.into_result().unwrap_or_default()
-                    }
-                }
-
                 // into_ok
-
-                impl impl_generics Copy for Type ty_generics where where_predicates T: Copy, E: Copy { }
-                impl impl_generics Clone for Type ty_generics where where_predicates T: Clone, E: Clone {
-                    #[inline]
-                    fn clone(&self) -> Self {
-                        match self {
-                            Type::Primary(x) => Type::Primary(x.clone()),
-                            Type::Secondary(x) => Type::Secondary(x.clone()),
-                        }
-                    }
-
-                    #[inline]
-                    fn clone_from(&mut self, source: &Self) {
-                        match (self, source) {
-                            (Type::Primary(to), Type::Primary(from)) => to.clone_from(from),
-                            (Type::Secondary(to), Type::Secondary(from)) => to.clone_from(from),
-                            (to, from) => *to = from.clone(),
-                        }
-                    }
-                }
 
                 impl impl_generics IntoIterator for Type ty_generics {
                     type Item = T;
@@ -755,6 +725,13 @@ impl LikeTrait for ResultLike {
                                 Type::Primary(t) => op(t),
                                 Type::Secondary(e) => Type::Secondary(e),
                             }
+                        }
+                    }
+
+                    impl impl_generics Type ty_generics where where_predicates T: Default {
+                        #[inline]
+                        pub fn unwrap_or_default(self) -> T {
+                            self.into_result().unwrap_or_default()
                         }
                     }
 
@@ -872,6 +849,25 @@ impl LikeTrait for ResultLike {
                     // iter_mut
                 }
 
+                impl impl_generics Copy for Type ty_generics where where_predicates T: Copy, E: Copy { }
+                impl impl_generics Clone for Type ty_generics where where_predicates T: Clone, E: Clone {
+                    #[inline]
+                    fn clone(&self) -> Self {
+                        match self {
+                            Type::Primary(x) => Type::Primary(x.clone()),
+                            Type::Secondary(x) => Type::Secondary(x.clone()),
+                        }
+                    }
+
+                    #[inline]
+                    fn clone_from(&mut self, source: &Self) {
+                        match (self, source) {
+                            (Type::Primary(to), Type::Primary(from)) => to.clone_from(from),
+                            (Type::Secondary(to), Type::Secondary(from)) => to.clone_from(from),
+                            (to, from) => *to = from.clone(),
+                        }
+                    }
+                }
 
                 // impl<T: std::ops::Deref, E> Type<T, E> {
                 //     pub fn as_deref_ok(&self) -> Type<&T::Target, &E> {

@@ -8,7 +8,7 @@
 //! use result_like::OptionLike;
 //!
 //! // Simple case with single argument name to use Some and None
-//! #[derive(OptionLike)]
+//! #[derive(OptionLike, Clone, Copy)]
 //! enum MyOption {
 //!     Some(u32),
 //!     None
@@ -142,21 +142,6 @@ where
     //     self.into_option().unwrap_or_default()
     // }
 }
-
-// impl<T> Clone for T where T: OptionLike, T::SomeType: Clone {
-//     #[inline]
-//     fn clone(&self) -> Self {
-//         Self::from_option(self.as_option().clone())
-//     }
-
-//     #[inline]
-//     fn clone_from(&mut self, source: &Self) {
-//         match (self, source) {
-//             (Type::Primary(to), Type::Primary(from)) => to.clone_from(from),
-//             (to, from) => *to = from.clone(),
-//         }
-//     }
-// }
 
 pub trait ResultLike {
     type OkType;

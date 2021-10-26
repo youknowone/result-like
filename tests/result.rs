@@ -1,8 +1,14 @@
 use result_like::ResultLike;
 
 #[test]
+fn test_x() {
+    #[derive(Clone)]
+    struct A;
+}
+
+#[test]
 fn test_simple() {
-    #[derive(ResultLike)]
+    #[derive(ResultLike, Clone, Copy)]
     enum XResult {
         Ok(u32),
         Err(()),
@@ -40,6 +46,15 @@ fn test_gen() {
     }
 
     assert_eq!(ResultB::Err(10).or::<()>(ResultB::Ok(10)).unwrap(), 10);
+
+    #[derive(Debug)]
+    struct Elem;
+
+    #[derive(ResultLike)]
+    enum ResultC<E> {
+        Ok(Elem), // test no-copy
+        Err(E),
+    }
 }
 
 #[test]
