@@ -2,7 +2,7 @@
 
 extern crate proc_macro;
 
-use inflector::Inflector;
+use heck::ToSnakeCase;
 use pmutil::{smart_quote, Quote, ToTokensExt};
 use quote::{quote, ToTokens};
 use syn::{
