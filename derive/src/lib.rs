@@ -2,12 +2,11 @@
 
 extern crate proc_macro;
 
-use inflector::Inflector;
 use pmutil::{smart_quote, Quote, ToTokensExt};
 use quote::{quote, ToTokens};
 use syn::{
     punctuated::Punctuated, token::Comma, Data, DataEnum, DeriveInput, Field, Generics, Ident,
-    ItemMod, WhereClause, WherePredicate,
+    WhereClause, WherePredicate,
 };
 use syn_ext::ext::*;
 
@@ -20,9 +19,7 @@ pub fn option_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         _ => panic!("`OptionLike` can be applied only on enums"),
     };
 
-    let item_mod = expand(&input, OptionLike, data);
-    let items = item_mod.content.unwrap().1;
-    quote!(#(#items)*).into()
+    expand(&input, OptionLike, data)
 }
 
 #[proc_macro_derive(ResultLike)]
@@ -34,9 +31,7 @@ pub fn result_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         _ => panic!("`ResultLike` can be applied only on enums"),
     };
 
-    let item_mod = expand(&input, ResultLike, data);
-    let items = item_mod.content.unwrap().1;
-    quote!(#(#items)*).into()
+    expand(&input, ResultLike, data)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -101,7 +96,11 @@ struct LikeData {
     fields: (VariantFieldsType, VariantFieldsType),
 }
 
-fn expand(input: &DeriveInput, like_trait: impl LikeTrait, data: &DataEnum) -> ItemMod {
+fn expand(
+    input: &DeriveInput,
+    like_trait: impl LikeTrait,
+    data: &DataEnum,
+) -> proc_macro::TokenStream {
     let typ = &input.ident;
     let like = like_trait.data();
 
@@ -133,15 +132,6 @@ fn expand(input: &DeriveInput, like_trait: impl LikeTrait, data: &DataEnum) -> I
         _ => None,
     };
 
-    let mod_name = Ident::new(
-        &format!(
-            "_impl_{}_{}",
-            like.name.to_snake_case(),
-            typ.to_string().to_snake_case()
-        ),
-        typ.span(),
-    );
-
     let like_impl = like_trait.quote_impl(ImplArgs {
         typ,
         generics: &input.generics,
@@ -151,12 +141,7 @@ fn expand(input: &DeriveInput, like_trait: impl LikeTrait, data: &DataEnum) -> I
         secondary_inner,
     });
 
-    syn::parse2(quote! {
-        mod #mod_name {
-            #like_impl
-        }
-    })
-    .expect("This is a bug. Please report the input used to show this error.")
+    like_impl.into()
 }
 
 struct OptionLike;
