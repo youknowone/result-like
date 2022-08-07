@@ -292,6 +292,18 @@ impl LikeTrait for OptionLike {
                     }
                 }
 
+                impl impl_generics From<Option<PrimaryValue>> for Type ty_generics where_clause {
+                    fn from(value: Option<PrimaryValue>) -> Self {
+                        Self::from_option(value)
+                    }
+                }
+
+                impl impl_generics Into<Option<PrimaryValue>> for Type ty_generics where_clause {
+                    fn into(self) -> Option<PrimaryValue> {
+                        self.into_option()
+                    }
+                }
+
                 impl impl_generics From<PrimaryValue> for Type ty_generics where_clause {
                     #[inline]
                     fn from(value: PrimaryValue) -> Self {
