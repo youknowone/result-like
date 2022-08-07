@@ -298,9 +298,9 @@ impl LikeTrait for OptionLike {
                     }
                 }
 
-                impl impl_generics Into<Option<PrimaryValue>> for Type ty_generics where_clause {
-                    fn into(self) -> Option<PrimaryValue> {
-                        self.into_option()
+                impl impl_generics From<Type ty_generics> for Option<PrimaryValue> where_clause {
+                    fn from(value: Type ty_generics) -> Self {
+                        value.into_option()
                     }
                 }
 
@@ -620,6 +620,18 @@ impl LikeTrait for ResultLike {
                     #[inline]
                     pub fn unwrap_or_else<F: FnOnce(E) -> T>(self, op: F) -> T {
                         self.into_result().unwrap_or_else(op)
+                    }
+                }
+
+                impl impl_generics From<Result<T, E>> for Type ty_generics where_clause {
+                    fn from(value: Result<T, E>) -> Self {
+                        Self::from_result(value)
+                    }
+                }
+
+                impl impl_generics From<Type ty_generics> for Result<T, E> where_clause {
+                    fn from(value: Type ty_generics) -> Self {
+                        value.into_result()
                     }
                 }
 
