@@ -10,6 +10,18 @@ use syn::{
 };
 use syn_ext::ext::*;
 
+#[proc_macro_derive(BoolLike)]
+pub fn bool_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input: DeriveInput = syn::parse(input).expect("failed to parse derive input");
+
+    let data = match input.data {
+        Data::Enum(ref data) => data,
+        _ => panic!("`OptionLike` can be applied only on enums"),
+    };
+
+    expand(&input, BoolLike, data)
+}
+
 #[proc_macro_derive(OptionLike)]
 pub fn option_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input: DeriveInput = syn::parse(input).expect("failed to parse derive input");
@@ -61,7 +73,7 @@ struct ImplArgs<'a> {
     generics: &'a Generics,
     primary: &'a Ident,
     secondary: &'a Ident,
-    primary_inner: &'a Punctuated<Field, Comma>,
+    primary_inner: Option<&'a Punctuated<Field, Comma>>,
     secondary_inner: Option<&'a Punctuated<Field, Comma>>,
 }
 
@@ -124,8 +136,8 @@ fn expand(
     let secondary = &secondary_variant.ident;
 
     let primary_inner = match &primary_variant.fields {
-        syn::Fields::Unnamed(syn::FieldsUnnamed { unnamed, .. }) => unnamed,
-        _ => unreachable!(),
+        syn::Fields::Unnamed(syn::FieldsUnnamed { unnamed, .. }) => Some(unnamed),
+        _ => None,
     };
     let secondary_inner = match &secondary_variant.fields {
         syn::Fields::Unnamed(syn::FieldsUnnamed { unnamed, .. }) => Some(unnamed),
@@ -142,6 +154,69 @@ fn expand(
     });
 
     like_impl.into()
+}
+
+struct BoolLike;
+
+impl LikeTrait for BoolLike {
+    fn data(&self) -> LikeData {
+        LikeData {
+            name: "BoolLike".to_owned(),
+            fields: (VariantFieldsType::Unit, VariantFieldsType::Unit),
+        }
+    }
+
+    fn quote_impl(&self, args: ImplArgs) -> Quote {
+        let ImplArgs {
+            typ,
+            primary,
+            secondary,
+            ..
+        } = args;
+        Quote::new_call_site().quote_with(smart_quote!(
+            Vars {
+                Type: &typ,
+                Primary: primary,
+                Secondary: secondary,
+            },
+            {
+                impl Type {
+                    pub const fn to_bool(self) -> bool {
+                        match self {
+                            Type::Primary => true,
+                            Type::Secondary => false,
+                        }
+                    }
+                    pub const fn from_bool(value: bool) -> Self {
+                        if value {
+                            Type::Primary
+                        } else {
+                            Type::Secondary
+                        }
+                    }
+                    pub fn then_some<T>(self, t: T) -> Option<T> {
+                        self.to_bool().then_some(t)
+                    }
+                    pub fn then<T, F>(self, f: F) -> Option<T>
+                    where
+                        F: FnOnce() -> T,
+                    {
+                        self.to_bool().then(f)
+                    }
+                }
+                impl From<bool> for Type {
+                    fn from(value: bool) -> Self {
+                        Self::from_bool(value)
+                    }
+                }
+                impl From<Type> for bool {
+                    fn from(value: Type) -> Self {
+                        value.to_bool()
+                    }
+                }
+            }
+        ))
+    }
 }
 
 struct OptionLike;
@@ -162,6 +237,7 @@ impl LikeTrait for OptionLike {
             primary_inner,
             ..
         } = args;
+        let primary_inner = primary_inner.expect("primary_inner always exists for OptionLike");
         let (impl_generics, ty_generics, where_clause, where_predicates) = args.split_for_impl();
         let mut option_impl = Quote::new_call_site().quote_with(smart_quote!(
             Vars {
@@ -292,6 +368,18 @@ impl LikeTrait for OptionLike {
                     }
                 }
 
+                impl impl_generics From<Option<PrimaryValue>> for Type ty_generics where_clause {
+                    fn from(value: Option<PrimaryValue>) -> Self {
+                        Self::from_option(value)
+                    }
+                }
+
+                impl impl_generics From<Type ty_generics> for Option<PrimaryValue> where_clause {
+                    fn from(value: Type ty_generics) -> Self {
+                        value.into_option()
+                    }
+                }
+
                 impl impl_generics From<PrimaryValue> for Type ty_generics where_clause {
                     #[inline]
                     fn from(value: PrimaryValue) -> Self {
@@ -367,8 +455,13 @@ impl LikeTrait for OptionLike {
                             self.into_option().map_or_else(default, f)
                         }
 
-                        // iter
-                        // iter_mut
+                        pub fn iter(&self) -> impl std::iter::Iterator<Item = &PrimaryValue> {
+                            self.as_option().into_iter()
+                        }
+
+                        pub fn iter_mut(&mut self) -> impl std::iter::Iterator<Item = &mut PrimaryValue> {
+                            self.as_option_mut().into_iter()
+                        }
 
                         #[inline]
                         pub fn and<_Other>(self, optb: Type<_Other>) -> Type<_Other> {
@@ -484,7 +577,7 @@ impl LikeTrait for OptionLike {
                     //     type IntoIter = std::option::Iter<'a, PrimaryValue>;
 
                     //     fn into_iter(self) -> std::option::Iter<'a, PrimaryValue> {
-                    //         self.iter()
+                    //         self.as_option().iter()
                     //     }
                     // }
 
@@ -540,6 +633,8 @@ impl LikeTrait for ResultLike {
             secondary_inner,
             ..
         } = args;
+        let primary_inner = primary_inner.expect("primary_inner always exists for ResultLike");
+        let secondary_inner = secondary_inner.expect("primary_inner always exists for ResultLike");
         let (impl_generics, ty_generics, where_clause, where_predicates) = args.split_for_impl();
         let mut result_impl = Quote::new_call_site().quote_with(smart_quote!(
             Vars {
@@ -611,6 +706,18 @@ impl LikeTrait for ResultLike {
                     }
                 }
 
+                impl impl_generics From<Result<T, E>> for Type ty_generics where_clause {
+                    fn from(value: Result<T, E>) -> Self {
+                        Self::from_result(value)
+                    }
+                }
+
+                impl impl_generics From<Type ty_generics> for Result<T, E> where_clause {
+                    fn from(value: Type ty_generics) -> Self {
+                        value.into_result()
+                    }
+                }
+
                 impl impl_generics Type ty_generics where where_predicates E: std::fmt::Debug {
                     #[inline]
                     pub fn expect(self, msg: &str) -> T {
@@ -656,7 +763,7 @@ impl LikeTrait for ResultLike {
         let primary_is_generic = primary_inner.iter().next().map_or(false, |f| {
             param_symbols.contains(&f.ty.to_token_stream().to_string())
         });
-        let secondary_is_generic = secondary_inner.unwrap().iter().next().map_or(false, |f| {
+        let secondary_is_generic = secondary_inner.iter().next().map_or(false, |f| {
             param_symbols.contains(&f.ty.to_token_stream().to_string())
         });
         let everything_is_generic = primary_is_generic && secondary_is_generic;
@@ -678,7 +785,7 @@ impl LikeTrait for ResultLike {
                     Secondary: secondary,
                     T: primary_inner,
                     E: secondary_inner,
-                    GenericE: if secondary_is_generic { secondary_inner } else { None },
+                    GenericE: if secondary_is_generic { Some(secondary_inner) } else { None },
                 },
                 {
                     impl impl_generics Type ty_generics where_clause {
