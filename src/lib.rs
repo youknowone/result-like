@@ -54,6 +54,10 @@
 //! assert_eq!(v.then(|| 1), Some(1));
 //! assert_eq!(v.then_some(1), Some(1));
 //!
+//! if MyBool::Enabled.into() {
+//!     // bool-like usage
+//! }
+//!
 //! #[derive(BoolLike)]
 //! enum ValuedBool {
 //!     Something = 50,
