@@ -455,8 +455,13 @@ impl LikeTrait for OptionLike {
                             self.into_option().map_or_else(default, f)
                         }
 
-                        // iter
-                        // iter_mut
+                        pub fn iter(&self) -> impl std::iter::Iterator<Item = &PrimaryValue> {
+                            self.as_option().into_iter()
+                        }
+
+                        pub fn iter_mut(&mut self) -> impl std::iter::Iterator<Item = &mut PrimaryValue> {
+                            self.as_option_mut().into_iter()
+                        }
 
                         #[inline]
                         pub fn and<_Other>(self, optb: Type<_Other>) -> Type<_Other> {
@@ -572,7 +577,7 @@ impl LikeTrait for OptionLike {
                     //     type IntoIter = std::option::Iter<'a, PrimaryValue>;
 
                     //     fn into_iter(self) -> std::option::Iter<'a, PrimaryValue> {
-                    //         self.iter()
+                    //         self.as_option().iter()
                     //     }
                     // }
 
