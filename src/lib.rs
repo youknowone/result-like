@@ -33,10 +33,45 @@
 //!     Failure(E),
 //! }
 //! ```
+//!
+//! # BoolLike
+//!
+//! BoolLike is comparably simpler than OptionLike and ResultLike.
+//!
+//! ```rust
+//! use result_like::BoolLike;
+//!
+//! #[derive(BoolLike, Clone, Copy, Debug, PartialEq, Eq)]
+//! enum MyBool {
+//!     Enabled,
+//!     Disabled,
+//! }
+//!
+//! let v = MyBool::Enabled;
+//! assert!(v.to_bool());
+//! assert!(!MyBool::Disabled.to_bool());
+//! assert_eq!(MyBool::from_bool(true), MyBool::Enabled);
+//! assert_eq!(v.then(|| 1), Some(1));
+//! assert_eq!(v.then_some(1), Some(1));
+//!
+//! #[derive(BoolLike)]
+//! enum ValuedBool {
+//!     Something = 50,
+//!     Nothing = 10,
+//! }
+//! assert!(ValuedBool::Something.to_bool());
+//! assert!(ValuedBool::Something as u8 == 50);
+//! ```
 
 extern crate result_like_derive;
 
 pub use result_like_derive::*;
+
+pub trait BoolLike
+where
+    Self: Sized,
+{
+}
 
 pub trait OptionLike
 where
