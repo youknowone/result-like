@@ -19,4 +19,4 @@ members = ["derive/"]
 result-like-derive = { version = "0.4.6", path = "derive/" }
 
 [dev-dependencies]
-is-macro = "0.1"
+is-macro = "0.3"
