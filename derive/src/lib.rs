@@ -8,7 +8,6 @@ use syn::{
     punctuated::Punctuated, token::Comma, Data, DataEnum, DeriveInput, Field, Generics, Ident,
     WhereClause, WherePredicate,
 };
-use syn_ext::ext::*;
 
 #[proc_macro_derive(BoolLike)]
 pub fn bool_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -758,7 +757,10 @@ impl LikeTrait for ResultLike {
         let param_symbols: Vec<_> = ty_generics
             .params
             .iter()
-            .map(|p| p.get_ident().unwrap().to_string())
+            .filter_map(|p| match p {
+                syn::GenericParam::Type(type_param) => Some(type_param.ident.to_string()),
+                _ => None,
+            })
             .collect();
         let primary_is_generic = primary_inner.iter().next().map_or(false, |f| {
             param_symbols.contains(&f.ty.to_token_stream().to_string())
