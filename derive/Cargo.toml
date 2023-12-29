@@ -1,6 +1,6 @@
 [package]
 name = "result-like-derive"
-version = "0.4.6"
+version = "0.5.0"
 edition = "2021"
 description = "derive macros for result-like"
 repository = "https://github.com/youknowone/result-like"
@@ -12,8 +12,7 @@ license = "BSD-2-Clause-Views"
 pmutil = "0.6"
 proc-macro2 = "1.0.29"
 quote = "1.0.10"
-syn = {version = "1.0.100", features = ["full", "extra-traits"]}
-syn-ext = {version = "0.4", features = ["full"]}
+syn = {version = "2", features = ["full", "extra-traits"]}
 
 [lib]
 proc-macro = true

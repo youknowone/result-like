@@ -16,7 +16,7 @@ keywords = ["option", "result", "monad", "macro", "enum"]
 members = ["derive/"]
 
 [dependencies]
-result-like-derive = { version = "0.4.6", path = "derive/" }
+result-like-derive = { version = "0.5.0", path = "derive/" }
 
 [dev-dependencies]
 is-macro = "0.3"
