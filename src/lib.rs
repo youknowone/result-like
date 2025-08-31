@@ -67,6 +67,9 @@
 //! assert!(ValuedBool::Something as u8 == 50);
 //! ```
 
+#![no_std]
+extern crate alloc;
+
 extern crate result_like_derive;
 
 pub use result_like_derive::*;
