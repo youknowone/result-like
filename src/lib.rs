@@ -1,7 +1,7 @@
 //! # OptionLike and ResultLike
 //!
 //! Define your own Option-like and Result-like enum types.
-//! Avoid to reimplement everything of [std::option::Option] and [std::result::Result] for your own enums.
+//! Avoid to reimplement everything of [core::option::Option] and [core::result::Result] for your own enums.
 //!
 //! Option example
 //! ```rust
@@ -168,12 +168,12 @@ where
     // where
     //     Self: Default,
     // {
-    //     std::mem::take(self)
+    //     core::mem::take(self)
     // }
 
     // #[inline]
     // fn replace(&mut self, value: Self::SomeType) -> Self {
-    //     std::mem::replace(self, Self::from_value(value))
+    //     core::mem::replace(self, Self::from_value(value))
     // }
 
     // #[inline]
