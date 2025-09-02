@@ -1,14 +1,25 @@
 [package]
 name = "result-like"
 description = "Option/Result-like monad interface for your own enum"
+keywords = ["option", "result", "monad", "macro", "enum"]
+version.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[workspace.package]
 version = "0.5.1"
 homepage = "https://github.com/youknowone/result-like"
 documentation = "http://docs.rs/result-like"
 repository = "https://github.com/youknowone/result-like"
-authors = ["Jeong YunWon <jeong+resultlike@youknowone.org>"]
+authors = ["Jeong, YunWon <jeong+resultlike@youknowone.org>"]
 edition = "2024"
+rust-version = "1.85.0"
 license = "BSD-2-Clause-Views"
-keywords = ["option", "result", "monad", "macro", "enum"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
