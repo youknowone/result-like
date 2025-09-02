@@ -357,13 +357,13 @@ impl LikeTrait for OptionLike {
 
                         match *self {
                             Type::Primary(ref mut v) => v,
-                            Type::Secondary => unsafe { std::hint::unreachable_unchecked() },
+                            Type::Secondary => unsafe { core::hint::unreachable_unchecked() },
                         }
                     }
 
                     #[inline]
                     pub fn replace(&mut self, value: PrimaryValue) -> Self {
-                        std::mem::replace(self, Type::Primary(value))
+                        core::mem::replace(self, Type::Primary(value))
                     }
                 }
 
@@ -395,10 +395,10 @@ impl LikeTrait for OptionLike {
 
                 impl impl_generics IntoIterator for Type ty_generics where_clause {
                     type Item = PrimaryValue;
-                    type IntoIter = std::option::IntoIter<PrimaryValue>;
+                    type IntoIter = core::option::IntoIter<PrimaryValue>;
 
                     #[inline]
-                    fn into_iter(self) -> std::option::IntoIter<PrimaryValue> {
+                    fn into_iter(self) -> core::option::IntoIter<PrimaryValue> {
                         self.into_option().into_iter()
                     }
                 }
@@ -454,11 +454,11 @@ impl LikeTrait for OptionLike {
                             self.into_option().map_or_else(default, f)
                         }
 
-                        pub fn iter(&self) -> impl std::iter::Iterator<Item = &PrimaryValue> {
+                        pub fn iter(&self) -> impl core::iter::Iterator<Item = &PrimaryValue> {
                             self.as_option().into_iter()
                         }
 
-                        pub fn iter_mut(&mut self) -> impl std::iter::Iterator<Item = &mut PrimaryValue> {
+                        pub fn iter_mut(&mut self) -> impl core::iter::Iterator<Item = &mut PrimaryValue> {
                             self.as_option_mut().into_iter()
                         }
 
@@ -491,7 +491,7 @@ impl LikeTrait for OptionLike {
 
                         #[inline]
                         pub fn take(&mut self) -> Self where where_predicates PrimaryValue: Default {
-                            std::mem::take(self)
+                            core::mem::take(self)
                         }
 
                         #[inline]
@@ -548,13 +548,13 @@ impl LikeTrait for OptionLike {
                     // expect_none
                     // unwrap_none
 
-                    impl impl_generics Type<PrimaryValue> where where_predicates PrimaryValue: std::ops::Deref {
+                    impl impl_generics Type<PrimaryValue> where where_predicates PrimaryValue: core::ops::Deref {
                         pub fn as_deref(&self) -> Type<&PrimaryValue::Target> {
                             self.as_ref().map(|t| t.deref())
                         }
                     }
 
-                    impl<PrimaryValue: std::ops::DerefMut> Type<PrimaryValue> {
+                    impl<PrimaryValue: core::ops::DerefMut> Type<PrimaryValue> {
                         pub fn as_deref_mut(&mut self) -> Type<&mut PrimaryValue::Target> {
                             self.as_mut().map(|t| t.deref_mut())
                         }
@@ -573,18 +573,18 @@ impl LikeTrait for OptionLike {
 
                     // impl<'a, PrimaryValue> IntoIterator for &'a Type<PrimaryValue> {
                     //     type Item = &'a PrimaryValue;
-                    //     type IntoIter = std::option::Iter<'a, PrimaryValue>;
+                    //     type IntoIter = core::option::Iter<'a, PrimaryValue>;
 
-                    //     fn into_iter(self) -> std::option::Iter<'a, PrimaryValue> {
+                    //     fn into_iter(self) -> core::option::Iter<'a, PrimaryValue> {
                     //         self.as_option().iter()
                     //     }
                     // }
 
                     // impl<'a, T> IntoIterator for &'a mut Self {
                     //     type Item = &'a mut T;
-                    //     type IntoIter = std::option::IterMut<'a, T>;
+                    //     type IntoIter = core::option::IterMut<'a, T>;
 
-                    //     fn into_iter(self) -> std::option::IterMut<'a, T> {
+                    //     fn into_iter(self) -> core::option::IterMut<'a, T> {
                     //         self.iter_mut()
                     //     }
                     // }
@@ -717,7 +717,7 @@ impl LikeTrait for ResultLike {
                     }
                 }
 
-                impl impl_generics Type ty_generics where where_predicates E: std::fmt::Debug {
+                impl impl_generics Type ty_generics where where_predicates E: core::fmt::Debug {
                     #[inline]
                     pub fn expect(self, msg: &str) -> T {
                         self.into_result().expect(msg)
@@ -729,7 +729,7 @@ impl LikeTrait for ResultLike {
                     }
                 }
 
-                impl impl_generics Type ty_generics where where_predicates T: std::fmt::Debug {
+                impl impl_generics Type ty_generics where where_predicates T: core::fmt::Debug {
                     // #[inline]
                     // pub fn expect_err(self, msg: &str) -> E {
                     //     self.into_result().expect_err(msg)
@@ -745,10 +745,10 @@ impl LikeTrait for ResultLike {
 
                 impl impl_generics IntoIterator for Type ty_generics {
                     type Item = T;
-                    type IntoIter = std::result::IntoIter<T>;
+                    type IntoIter = core::result::IntoIter<T>;
 
                     #[inline]
-                    fn into_iter(self) -> std::result::IntoIter<T> {
+                    fn into_iter(self) -> core::result::IntoIter<T> {
                         self.into_result().into_iter()
                     }
                 }
@@ -963,37 +963,37 @@ impl LikeTrait for ResultLike {
                     }
                 }
 
-                // impl<T: std::ops::Deref, E> Type<T, E> {
+                // impl<T: core::ops::Deref, E> Type<T, E> {
                 //     pub fn as_deref_ok(&self) -> Type<&T::Target, &E> {
                 //         self.as_ref().map(|t| t.deref())
                 //     }
                 // }
 
-                // impl<T, E: std::ops::Deref> Type<T, E> {
+                // impl<T, E: core::ops::Deref> Type<T, E> {
                 //     pub fn as_deref_err(&self) -> Type<&T, &E::Target> {
                 //         self.as_ref().map_err(|e| e.deref())
                 //     }
                 // }
 
-                impl impl_generics Type ty_generics where where_predicates T: std::ops::Deref, E: std::ops::Deref {
+                impl impl_generics Type ty_generics where where_predicates T: core::ops::Deref, E: core::ops::Deref {
                     pub fn as_deref(&self) -> Type<&T::Target, &E::Target> {
                         self.as_ref().map(|t| t.deref()).map_err(|e| e.deref())
                     }
                 }
 
-                // impl<T: std::ops::DerefMut, E> Type<T, E> {
+                // impl<T: core::ops::DerefMut, E> Type<T, E> {
                 //     pub fn as_deref_mut_ok(&mut self) -> Type<&mut T::Target, &mut E> {
                 //         self.as_mut().map(|t| t.deref_mut())
                 //     }
                 // }
 
-                // impl<T, E: std::ops::DerefMut> Type<T, E> {
+                // impl<T, E: core::ops::DerefMut> Type<T, E> {
                 //     pub fn as_deref_mut_err(&mut self) -> Type<&mut T, &mut E::Target> {
                 //         self.as_mut().map_err(|e| e.deref_mut())
                 //     }
                 // }
 
-                // impl<T: std::ops::DerefMut, E: std::ops::DerefMut> Type<T, E> {
+                // impl<T: core::ops::DerefMut, E: core::ops::DerefMut> Type<T, E> {
                 //     pub fn as_deref_mut(&mut self) -> Type<&mut T::Target, &mut E::Target> {
                 //         self.as_mut()
                 //             .map(|t| t.deref_mut())
@@ -1006,9 +1006,9 @@ impl LikeTrait for ResultLike {
 
                 // impl<'a, T, E> IntoIterator for &'a Type<T, E> {
                 //     type Item = &'a T;
-                //     type IntoIter = std::result::Iter<'a, T>;
+                //     type IntoIter = core::result::Iter<'a, T>;
 
-                //     fn into_iter(self) -> std::result::Iter<'a, T> {
+                //     fn into_iter(self) -> core::result::Iter<'a, T> {
                 //         self.into_result().iter()
                 //     }
                 // }
