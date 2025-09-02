@@ -762,12 +762,14 @@ impl LikeTrait for ResultLike {
                 _ => None,
             })
             .collect();
-        let primary_is_generic = primary_inner.iter().next().map_or(false, |f| {
-            param_symbols.contains(&f.ty.to_token_stream().to_string())
-        });
-        let secondary_is_generic = secondary_inner.iter().next().map_or(false, |f| {
-            param_symbols.contains(&f.ty.to_token_stream().to_string())
-        });
+        let primary_is_generic = primary_inner
+            .iter()
+            .next()
+            .is_some_and(|f| param_symbols.contains(&f.ty.to_token_stream().to_string()));
+        let secondary_is_generic = secondary_inner
+            .iter()
+            .next()
+            .is_some_and(|f| param_symbols.contains(&f.ty.to_token_stream().to_string()));
         let everything_is_generic = primary_is_generic && secondary_is_generic;
 
         // println!(
