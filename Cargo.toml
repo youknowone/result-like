@@ -6,7 +6,7 @@ homepage = "https://github.com/youknowone/result-like"
 documentation = "http://docs.rs/result-like"
 repository = "https://github.com/youknowone/result-like"
 authors = ["Jeong YunWon <jeong+resultlike@youknowone.org>"]
-edition = "2021"
+edition = "2024"
 license = "BSD-2-Clause-Views"
 keywords = ["option", "result", "monad", "macro", "enum"]
 
