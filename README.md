@@ -3,7 +3,7 @@
 Install: [https://crates.io/crates/result-like](https://crates.io/crates/result-like)
 
 Define your own Option-like and Result-like enum types.
-Avoid to reimplement everything of option and result for your own enums.
+Avoid reimplementing the entire APIs of option and result for your own enums.
 
 Option example
 ```rust

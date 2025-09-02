@@ -2,11 +2,11 @@
 
 extern crate proc_macro;
 
-use pmutil::{smart_quote, Quote, ToTokensExt};
-use quote::{quote, ToTokens};
+use pmutil::{Quote, ToTokensExt, smart_quote};
+use quote::{ToTokens, quote};
 use syn::{
-    punctuated::Punctuated, token::Comma, Data, DataEnum, DeriveInput, Field, Generics, Ident,
-    WhereClause, WherePredicate,
+    Data, DataEnum, DeriveInput, Field, Generics, Ident, WhereClause, WherePredicate,
+    punctuated::Punctuated, token::Comma,
 };
 
 #[proc_macro_derive(BoolLike)]
@@ -15,7 +15,7 @@ pub fn bool_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let data = match input.data {
         Data::Enum(ref data) => data,
-        _ => panic!("`OptionLike` can be applied only on enums"),
+        _ => panic!("`BoolLike` can be applied only on enums"),
     };
 
     expand(&input, BoolLike, data)
@@ -272,7 +272,7 @@ impl LikeTrait for OptionLike {
                     #[inline]
                     pub fn as_option(&self) -> Option<&PrimaryValue> {
                         match self {
-                            Type::Primary(ref v) => Some(v),
+                            Type::Primary(v) => Some(v),
                             Type::Secondary => None,
                         }
                     }
@@ -280,7 +280,7 @@ impl LikeTrait for OptionLike {
                     #[inline]
                     pub fn as_option_mut(&mut self) -> Option<&mut PrimaryValue> {
                         match self {
-                            Type::Primary(ref mut v) => Some(v),
+                            Type::Primary(v) => Some(v),
                             Type::Secondary => None,
                         }
                     }
@@ -355,8 +355,8 @@ impl LikeTrait for OptionLike {
                             *self = Type::Primary(f());
                         }
 
-                        match *self {
-                            Type::Primary(ref mut v) => v,
+                        match self {
+                            Type::Primary(v) => v,
                             Type::Secondary => unsafe { core::hint::unreachable_unchecked() },
                         }
                     }
@@ -420,16 +420,16 @@ impl LikeTrait for OptionLike {
                     impl impl_generics Type ty_generics where_clause {
                         #[inline]
                         pub fn as_ref(&self) -> Type<&PrimaryValue> {
-                            match *self {
-                                Type::Primary(ref x) => Type::Primary(x),
+                            match self {
+                                Type::Primary(x) => Type::Primary(x),
                                 Type::Secondary => Type::Secondary,
                             }
                         }
 
                         #[inline]
                         pub fn as_mut(&mut self) -> Type<&mut PrimaryValue> {
-                            match *self {
-                                Type::Primary(ref mut x) => Type::Primary(x),
+                            match self {
+                                Type::Primary(x) => Type::Primary(x),
                                 Type::Secondary => Type::Secondary,
                             }
                         }
@@ -633,7 +633,8 @@ impl LikeTrait for ResultLike {
             ..
         } = args;
         let primary_inner = primary_inner.expect("primary_inner always exists for ResultLike");
-        let secondary_inner = secondary_inner.expect("primary_inner always exists for ResultLike");
+        let secondary_inner =
+            secondary_inner.expect("secondary_inner always exists for ResultLike");
         let (impl_generics, ty_generics, where_clause, where_predicates) = args.split_for_impl();
         let mut result_impl = Quote::new_call_site().quote_with(smart_quote!(
             Vars {
@@ -672,16 +673,16 @@ impl LikeTrait for ResultLike {
                     #[inline]
                     pub fn as_result(&self) -> Result<&T, &E> {
                         match self {
-                            Type::Primary(ref x) => Ok(x),
-                            Type::Secondary(ref x) => Err(x),
+                            Type::Primary(x) => Ok(x),
+                            Type::Secondary(x) => Err(x),
                         }
                     }
 
                     #[inline]
                     pub fn as_result_mut(&mut self) -> Result<&mut T, &mut E> {
                         match self {
-                            Type::Primary(ref mut x) => Ok(x),
-                            Type::Secondary(ref mut x) => Err(x),
+                            Type::Primary(x) => Ok(x),
+                            Type::Secondary(x) => Err(x),
                         }
                     }
 
@@ -762,12 +763,14 @@ impl LikeTrait for ResultLike {
                 _ => None,
             })
             .collect();
-        let primary_is_generic = primary_inner.iter().next().map_or(false, |f| {
-            param_symbols.contains(&f.ty.to_token_stream().to_string())
-        });
-        let secondary_is_generic = secondary_inner.iter().next().map_or(false, |f| {
-            param_symbols.contains(&f.ty.to_token_stream().to_string())
-        });
+        let primary_is_generic = primary_inner
+            .iter()
+            .next()
+            .is_some_and(|f| param_symbols.contains(&f.ty.to_token_stream().to_string()));
+        let secondary_is_generic = secondary_inner
+            .iter()
+            .next()
+            .is_some_and(|f| param_symbols.contains(&f.ty.to_token_stream().to_string()));
         let everything_is_generic = primary_is_generic && secondary_is_generic;
 
         // println!(
@@ -926,16 +929,16 @@ impl LikeTrait for ResultLike {
                     #[inline]
                     pub fn as_ref(&self) -> Type<&T, &E> {
                         match self {
-                            Type::Primary(ref x) => Type::Primary(x),
-                            Type::Secondary(ref x) => Type::Secondary(x),
+                            Type::Primary(x) => Type::Primary(x),
+                            Type::Secondary(x) => Type::Secondary(x),
                         }
                     }
 
                     #[inline]
                     pub fn as_mut(&mut self) -> Type<&mut T, &mut E> {
                         match self {
-                            Type::Primary(ref mut x) => Type::Primary(x),
-                            Type::Secondary(ref mut x) => Type::Secondary(x),
+                            Type::Primary(x) => Type::Primary(x),
+                            Type::Secondary(x) => Type::Secondary(x),
                         }
                     }
 
