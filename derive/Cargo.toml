@@ -1,6 +1,6 @@
 [package]
 name = "result-like-derive"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 description = "derive macros for result-like"
 repository = "https://github.com/youknowone/result-like"
