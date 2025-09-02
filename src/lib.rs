@@ -1,7 +1,7 @@
 //! # OptionLike and ResultLike
 //!
 //! Define your own Option-like and Result-like enum types.
-//! Avoid to reimplement everything of [core::option::Option] and [core::result::Result] for your own enums.
+//! Avoid to reimplement everything of [std::option::Option] and [std::result::Result] for your own enums.
 //!
 //! Option example
 //! ```rust
