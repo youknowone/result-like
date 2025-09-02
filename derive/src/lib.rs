@@ -15,7 +15,7 @@ pub fn bool_like(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let data = match input.data {
         Data::Enum(ref data) => data,
-        _ => panic!("`OptionLike` can be applied only on enums"),
+        _ => panic!("`BoolLike` can be applied only on enums"),
     };
 
     expand(&input, BoolLike, data)
@@ -633,7 +633,8 @@ impl LikeTrait for ResultLike {
             ..
         } = args;
         let primary_inner = primary_inner.expect("primary_inner always exists for ResultLike");
-        let secondary_inner = secondary_inner.expect("primary_inner always exists for ResultLike");
+        let secondary_inner =
+            secondary_inner.expect("secondary_inner always exists for ResultLike");
         let (impl_generics, ty_generics, where_clause, where_predicates) = args.split_for_impl();
         let mut result_impl = Quote::new_call_site().quote_with(smart_quote!(
             Vars {
