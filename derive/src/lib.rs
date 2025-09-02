@@ -3,7 +3,7 @@
 extern crate proc_macro;
 
 use pmutil::{Quote, ToTokensExt, smart_quote};
-use quote::{ToTokens, quote};
+use quote::quote;
 use syn::{
     Data, DataEnum, DeriveInput, Field, Generics, Ident, WhereClause, WherePredicate,
     punctuated::Punctuated, token::Comma,
@@ -759,18 +759,18 @@ impl LikeTrait for ResultLike {
             .params
             .iter()
             .filter_map(|p| match p {
-                syn::GenericParam::Type(type_param) => Some(type_param.ident.to_string()),
+                syn::GenericParam::Type(type_param) => Some(type_param.ident.clone()),
                 _ => None,
             })
             .collect();
         let primary_is_generic = primary_inner
             .iter()
             .next()
-            .is_some_and(|f| param_symbols.contains(&f.ty.to_token_stream().to_string()));
+            .is_some_and(|f| is_generic(&f.ty, &param_symbols));
         let secondary_is_generic = secondary_inner
             .iter()
             .next()
-            .is_some_and(|f| param_symbols.contains(&f.ty.to_token_stream().to_string()));
+            .is_some_and(|f| is_generic(&f.ty, &param_symbols));
         let everything_is_generic = primary_is_generic && secondary_is_generic;
 
         // println!(
@@ -1029,4 +1029,13 @@ impl LikeTrait for ResultLike {
         }
         result_impl
     }
+}
+
+fn is_generic(ty: &syn::Type, generics: &[Ident]) -> bool {
+    if let syn::Type::Path(p) = ty {
+        if let Some(ident) = p.path.get_ident() {
+            return generics.iter().any(|g| ident == g);
+        }
+    }
+    false
 }
